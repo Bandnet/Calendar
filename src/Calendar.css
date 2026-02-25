@@ -1,0 +1,116 @@
+/* Calendar container */
+.Calendar-Container {
+    width: 350px;
+    margin: 20px auto;
+    font-family: Arial, sans-serif;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    background-color: #fdfdfd;
+}
+
+/* Header */
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #59e24a;
+    color: white;
+    padding: 10px 15px;
+}
+
+.calendar-header h2 {
+    margin: 0;
+    font-size: 1.2rem;
+}
+
+.calendar-header button {
+    background-color: white;
+    color: #59e24a;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.calendar-header button:hover {
+    background-color: #e0e0e0;
+}
+
+/* Weekday row */
+.calendar-weekdays {
+    display: flex;
+    justify-content: space-between;
+    background-color: #f0f0f0;
+    padding: 5px 10px;
+    margin: 0;
+    list-style: none;
+    font-weight: bold;
+    text-align: center;
+}
+
+.calendar-weekdays li {
+    width: 14.28%;
+}
+
+/* Days grid */
+.calendar-dates {
+    display: flex;
+    flex-wrap: wrap;
+    padding: 5px 0;
+    margin: 0;
+    list-style: none;
+}
+
+.calendar-dates li {
+    width: 14.28%;
+    height: 50px;
+    line-height: 50px;
+    text-align: center;
+    margin-bottom: 5px;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: all 0.2s;
+}
+
+/* Hover effect */
+.calendar-dates li:hover {
+    background-color: #daffd0;
+}
+
+/* Highlight today */
+.calendar-dates li.active {
+    background-color: #ffecb3;
+    font-weight: bold;
+    color: #ff9800;
+}
+
+/* Highlight clicked day */
+.calendar-dates li.highlight {
+    background-color: #59e24a;
+    color: white;
+    font-weight: bold;
+}
+
+/* Inactive days from other months */
+.calendar-dates li.inactive {
+    color: #ccc;
+    cursor: default;
+}
+.clickDay{
+    background-color: #59E24AFF;
+    color: white;
+}
+
+/* Responsive */
+@media (max-width: 400px) {
+    .Calendar-Container {
+        width: 100%;
+    }
+    .calendar-dates li {
+        height: 40px;
+        line-height: 40px;
+    }
+}

@@ -10,6 +10,7 @@ export default function Calendar() {
     const [date, setDate] = useState(new Date());
     const [clickDay, setClickDay] = useState(null);
     const [events, setEvents] = useState({});
+    const [isCalendarVisible, setIsCalendarVisible] = useState(false);
 
     const month = date.getMonth();
     const year = date.getFullYear();
@@ -56,7 +57,10 @@ export default function Calendar() {
             const isClicked = clickDay === i;
             days.push(
                 <li key={i} className={`${isRealToday ? "active" : ""} ${isClicked ? "highlight" : ""}`}
-                    onClick={() => setClickDay(clickDay === i ? null : i)}>
+                    onClick={() => {
+                        setClickDay(clickDay === i ? null : i);
+                        if (window.innerWidth <= 1100) setIsCalendarVisible(false);
+                    }}>
                     {i}
                 </li>
             );
@@ -88,15 +92,26 @@ export default function Calendar() {
     return (
         <div className="calendar-outer-container">
             <div className="calendar-wrapper">
-                {/* NAVIGATION LINKS */}
                 <div className="Calendar-Container">
                     <h1>Calendar</h1>
                     <div className="calendar-header">
-                        <button onClick={() => { setDate(new Date(year, month - 1, 1)); setClickDay(null); }}>Prev</button>
-                        <h2>{months[month]} {year}</h2>
-                        <button onClick={() => { setDate(new Date(year, month + 1, 1)); setClickDay(null); }}>Next</button>
+                        <button onClick={(e) => {
+                            e.stopPropagation();
+                            setDate(new Date(year, month - 1, 1));
+                        }}>Prev</button>
+
+                        <h2 className="mobile-toggle-btn" onClick={() => setIsCalendarVisible(!isCalendarVisible)}>
+                            {months[month]} {year}
+                            <i className={`bi bi-chevron-${isCalendarVisible ? 'up' : 'down'} mobile-only-icon`}></i>
+                        </h2>
+
+                        <button onClick={(e) => {
+                            e.stopPropagation();
+                            setDate(new Date(year, month + 1, 1));
+                        }}>Next</button>
                     </div>
-                    <div className="calendar-body">
+
+                    <div className={`calendar-body ${isCalendarVisible ? "mobile-visible" : "mobile-hidden"}`}>
                         <ul className="calendar-weekdays">
                             {weekDaysNames.map(day => <li key={day}>{day}</li>)}
                         </ul>
@@ -104,7 +119,6 @@ export default function Calendar() {
                     </div>
                 </div>
 
-                {/* HAUPTBEREICH RECHTS */}
                 <div className="event-panel">
                     <div className="panel-header-row">
                         <h2 className="overview-title">Week Overview</h2>

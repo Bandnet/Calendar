@@ -1,4 +1,5 @@
 import { useState } from "react";
+import 'bootstrap-icons/font/bootstrap-icons.css';
 import "./Calendar.css";
 
 export default function Calendar() {
@@ -125,7 +126,10 @@ export default function Calendar() {
                                         {events[d.key]?.map((ev, idx) => (
                                             <div key={idx} className="mini-event">
                                                 <span className="event-text">{ev}</span>
-                                                <button className="delete-btn" onClick={(e) => { e.stopPropagation(); deleteEvent(d.key, idx); }}>×</button>
+                                                <button className="delete-btn" onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    deleteEvent(d.key, idx);
+                                                }}><i className="bi bi-trash-fill"></i></button>
                                             </div>
                                         ))}
                                     </div>

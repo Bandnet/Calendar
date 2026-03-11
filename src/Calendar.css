@@ -97,6 +97,10 @@ html, body {
     border-radius: 4px;
 }
 
+.calendar-dates {
+    color: #1a1a1a;
+}
+
 .calendar-dates li.inactive {
     color: #ccc;
 }
@@ -329,6 +333,7 @@ html, body {
     .Calendar-Container {
         width: 100%;
         max-width: none;
+        color: #1a1a1a;
         flex: none;
     }
 

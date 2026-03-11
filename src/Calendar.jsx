@@ -1,32 +1,91 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import "./Calendar.css";
+import Events from "./Events";
 
 export default function Calendar() {
+    // --- KONSTANTEN ---
     const today = new Date();
     const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
     const weekDaysNames = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
+    // --- STATES ---
     const [date, setDate] = useState(new Date());
     const [clickDay, setClickDay] = useState(null);
-    const [events, setEvents] = useState({});
     const [isCalendarVisible, setIsCalendarVisible] = useState(false);
 
+    // Modal-States
+    const [isModalOpen, setIsModalOpen] = useState(false); // Add Event Modal
+    const [viewEvent, setViewEvent] = useState(null);      // Detail View Modal
+    const [formData, setFormData] = useState({ title: "", description: "", time: "" });
+
+    // Events State mit LocalStorage
+    const [events, setEvents] = useState(() => {
+        const saved = localStorage.getItem('calendarEvents');
+        return saved ? JSON.parse(saved) : {};
+    });
+
+    // --- EFFEKTE ---
+    useEffect(() => {
+        localStorage.setItem('calendarEvents', JSON.stringify(events));
+    }, [events]);
+
+    // --- VARIABLEN ---
     const month = date.getMonth();
     const year = date.getFullYear();
-
-    const selectedDate = clickDay !== null ? new Date(year, month, clickDay) : null;
     const selectedDateKey = clickDay !== null ? `${year}-${month + 1}-${clickDay}` : null;
 
-    const getWeekStart = (date) => {
-        const d = new Date(date);
-        const day = d.getDay();
-        const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-        return new Date(d.setDate(diff));
+    // --- LOGIK FUNKTIONEN ---
+    const handleSaveEvent = (e) => {
+        e.preventDefault();
+        if (!formData.title.trim()) return;
+
+        const newEventObj = {
+            id: Date.now(),
+            title: formData.title,
+            description: formData.description,
+            time: formData.time
+        };
+
+        setEvents(prev => ({
+            ...prev,
+            [selectedDateKey]: prev[selectedDateKey] ? [...prev[selectedDateKey], newEventObj] : [newEventObj]
+        }));
+
+        setFormData({ title: "", description: "", time: "" });
+        setIsModalOpen(false);
+    };
+
+    const deleteEvent = (dateKey, id) => {
+        setEvents(prev => ({
+            ...prev,
+            [dateKey]: prev[dateKey].filter((ev) => ev.id !== id)
+        }));
+    };
+
+    const openViewModal = (eventObj, dateKey) => {
+        setViewEvent({ ...eventObj, dateKey });
+    };
+
+    const openAddEventModal = () => {
+        if (!clickDay) {
+            alert("Please select a day first!");
+            return;
+        }
+        setIsModalOpen(true);
+    };
+
+    // --- KALENDER GENERIERUNG ---
+    const getWeekStart = (d) => {
+        const dateCopy = new Date(d);
+        const day = dateCopy.getDay();
+        const diff = dateCopy.getDate() - day + (day === 0 ? -6 : 1);
+        return new Date(dateCopy.setDate(diff));
     };
 
     const getWeekDays = () => {
-        if (!selectedDate) return [];
+        if (clickDay === null) return [];
+        const selectedDate = new Date(year, month, clickDay);
         const start = getWeekStart(selectedDate);
         const days = [];
         for (let i = 0; i < 7; i++) {
@@ -72,43 +131,19 @@ export default function Calendar() {
         return days;
     };
 
-    const addEvent = () => {
-        if (!clickDay) return;
-        const eventName = prompt("Event name:");
-        if (!eventName) return;
-        setEvents(prev => ({
-            ...prev,
-            [selectedDateKey]: prev[selectedDateKey] ? [...prev[selectedDateKey], eventName] : [eventName]
-        }));
-    };
-
-    const deleteEvent = (dateKey, index) => {
-        setEvents(prev => ({
-            ...prev,
-            [dateKey]: prev[dateKey].filter((_, i) => i !== index)
-        }));
-    };
-
     return (
         <div className="calendar-outer-container">
             <div className="calendar-wrapper">
+                {/* KALENDER BOX */}
                 <div className="Calendar-Container">
                     <h1>Calendar</h1>
                     <div className="calendar-header">
-                        <button onClick={(e) => {
-                            e.stopPropagation();
-                            setDate(new Date(year, month - 1, 1));
-                        }}>Prev</button>
-
+                        <button onClick={() => setDate(new Date(year, month - 1, 1))}>Prev</button>
                         <h2 className="mobile-toggle-btn" onClick={() => setIsCalendarVisible(!isCalendarVisible)}>
                             {months[month]} {year}
                             <i className={`bi bi-chevron-${isCalendarVisible ? 'up' : 'down'} mobile-only-icon`}></i>
                         </h2>
-
-                        <button onClick={(e) => {
-                            e.stopPropagation();
-                            setDate(new Date(year, month + 1, 1));
-                        }}>Next</button>
+                        <button onClick={() => setDate(new Date(year, month + 1, 1))}>Next</button>
                     </div>
 
                     <div className={`calendar-body ${isCalendarVisible ? "mobile-visible" : "mobile-hidden"}`}>
@@ -119,40 +154,92 @@ export default function Calendar() {
                     </div>
                 </div>
 
-                <div className="event-panel">
-                    <div className="panel-header-row">
-                        <h2 className="overview-title">Week Overview</h2>
-                        <button className="add-event-btn" onClick={addEvent}>+ Add Event</button>
-                    </div>
+                {/* EVENTS BOX (Wochenübersicht) */}
+                <Events
+                    clickDay={clickDay}
+                    getWeekDays={getWeekDays}
+                    today={today}
+                    month={month}
+                    months={months}
+                    weekDaysNames={weekDaysNames}
+                    events={events}
+                    addEvent={openAddEventModal}
+                    openViewModal={openViewModal}
+                />
+            </div>
 
-                    <div className="week-view">
-                        {clickDay ? getWeekDays().map((d, i) => {
-                            const isToday = d.day === today.getDate() && d.month === today.getMonth() && d.year === today.getFullYear();
-                            return (
-                                <div key={i} className={`week-day-card 
-                                    ${d.day === clickDay && d.month === month ? "selected" : ""} 
-                                    ${isToday ? "today-card" : ""}`}>
-                                    <div className="card-header">
-                                        <strong>{weekDaysNames[i]}</strong>
-                                        <span>{d.day}. {months[d.month].substring(0, 3)}</span>
-                                    </div>
-                                    <div className="card-events">
-                                        {events[d.key]?.map((ev, idx) => (
-                                            <div key={idx} className="mini-event">
-                                                <span className="event-text">{ev}</span>
-                                                <button className="delete-btn" onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    deleteEvent(d.key, idx);
-                                                }}><i className="bi bi-trash-fill"></i></button>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            );
-                        }) : <div className="no-selection-msg">Select a day to view the week</div>}
+            {/* MODAL: EVENT HINZUFÜGEN */}
+            {isModalOpen && (
+                <div className="modal-overlay" onClick={() => setIsModalOpen(false)}>
+                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                        <h3>Add Event for {selectedDateKey}</h3>
+                        <form onSubmit={handleSaveEvent}>
+                            <input
+                                autoFocus
+                                type="text"
+                                placeholder="Title"
+                                value={formData.title}
+                                onChange={(e) => setFormData({...formData, title: e.target.value})}
+                            />
+                            <input
+                                type="time"
+                                value={formData.time}
+                                onChange={(e) => setFormData({...formData, time: e.target.value})}
+                            />
+                            <textarea
+                                placeholder="Description"
+                                value={formData.description}
+                                onChange={(e) => setFormData({...formData, description: e.target.value})}
+                            />
+                            <div className="modal-buttons">
+                                <button type="button" onClick={() => setIsModalOpen(false)}>Cancel</button>
+                                <button type="submit" className="save-btn">Save Event</button>
+                            </div>
+                        </form>
                     </div>
                 </div>
-            </div>
+            )}
+
+            {/* MODAL: EVENT DETAILS ANSEHEN */}
+            {viewEvent && (
+                <div className="modal-overlay" onClick={() => setViewEvent(null)}>
+                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                        <h3 style={{ color: "#59e24a" }}>Event Details</h3>
+
+                        <div className="detail-item">
+                            <label>Titel:</label>
+                            <p><strong>{viewEvent.title}</strong></p>
+                        </div>
+
+                        {viewEvent.time && (
+                            <div className="detail-item">
+                                <label>Zeit:</label>
+                                <p>{viewEvent.time}</p>
+                            </div>
+                        )}
+
+                        {viewEvent.description && (
+                            <div className="detail-item">
+                                <label>Beschreibung:</label>
+                                <p>{viewEvent.description}</p>
+                            </div>
+                        )}
+
+                        <div className="modal-buttons" style={{ marginTop: "20px" }}>
+                            <button
+                                className="delete-btn-modal"
+                                onClick={() => {
+                                    deleteEvent(viewEvent.dateKey, viewEvent.id);
+                                    setViewEvent(null);
+                                }}
+                            >
+                                Löschen
+                            </button>
+                            <button className="save-btn" onClick={() => setViewEvent(null)}>Schließen</button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

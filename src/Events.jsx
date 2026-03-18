@@ -1,5 +1,25 @@
 import React from 'react';
 
+const COLORS = {
+    green: "#59e24a",
+    blue: "#4a8fe2",
+    red: "#e24a4a",
+    orange: "#e28a4a",
+    yellow: "#e2d84a",
+    purple: "#9a4ae2",
+    pink: "#e24ab0"
+};
+
+const DARK_COLORS = {
+    green: "#3da132",
+    blue: "#2a5fa2",
+    red: "#b33535",
+    orange: "#b36b35",
+    yellow: "#b3a835",
+    purple: "#6d32a1",
+    pink: "#b3358a"
+};
+
 export default function Events({
                                    clickDay,
                                    getWeekDays,
@@ -40,6 +60,11 @@ export default function Events({
                                         <div
                                             key={ev.id}
                                             className="mini-event"
+                                            style={{
+                                                backgroundColor: COLORS[ev.color] || COLORS.green,
+                                                borderLeft: `solid 5px ${DARK_COLORS[ev.color] || COLORS.green}`,
+
+                                            }}
                                             onClick={() => openViewModal(ev, d.key)}
                                         >
                                             <div className="event-main-info">

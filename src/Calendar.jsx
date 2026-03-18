@@ -40,20 +40,36 @@ export default function Calendar() {
         e.preventDefault();
         if (!formData.title.trim()) return;
 
-        const newEventObj = {
-            id: Date.now(),
-            title: formData.title,
-            description: formData.description,
-            time: formData.time
-        };
+        setEvents(prev => {
+            const dateKey = viewEvent ? viewEvent.dateKey : selectedDateKey;
+            const currentEvents = prev[dateKey] || [];
 
-        setEvents(prev => ({
-            ...prev,
-            [selectedDateKey]: prev[selectedDateKey] ? [...prev[selectedDateKey], newEventObj] : [newEventObj]
-        }));
+            let updatedEvents;
 
-        setFormData({ title: "", description: "", time: "" });
+            if (viewEvent) {
+                // BEARBEITEN: Das existierende Event in der Liste finden und ersetzen
+                updatedEvents = currentEvents.map(ev =>
+                    ev.id === viewEvent.id
+                        ? { ...ev, ...formData } // Alle Felder aus formData übernehmen
+                        : ev
+                );
+            } else {
+                // NEU ERSTELLEN: Wie bisher
+                const newEventObj = {
+                    id: Date.now(),
+                    ...formData,
+                    color: formData.color || "green"
+                };
+                updatedEvents = [...currentEvents, newEventObj];
+            }
+
+            return { ...prev, [dateKey]: updatedEvents };
+        });
+
+        // Reset & Schließen
+        setFormData({ title: "", description: "", time: "", color: "green" });
         setIsModalOpen(false);
+        setViewEvent(null);
     };
 
     const deleteEvent = (dateKey, id) => {
@@ -65,6 +81,12 @@ export default function Calendar() {
 
     const openViewModal = (eventObj, dateKey) => {
         setViewEvent({ ...eventObj, dateKey });
+        setFormData({
+            title: eventObj.title,
+            description: eventObj.description,
+            time: eventObj.time,
+            color: eventObj.color
+        });
     };
 
     const openAddEventModal = () => {
@@ -118,7 +140,7 @@ export default function Calendar() {
                 <li key={i} className={`${isRealToday ? "active" : ""} ${isClicked ? "highlight" : ""}`}
                     onClick={() => {
                         setClickDay(clickDay === i ? null : i);
-                        if (window.innerWidth <= 1100) setIsCalendarVisible(false);
+                        if (window.innerWidth <= 1100) setIsCalendarVisible(false); // schliesst den Calendar automatisch nach auswahl von tag in Handy ansicht
                     }}>
                     {i}
                 </li>
@@ -181,6 +203,21 @@ export default function Calendar() {
                                 value={formData.title}
                                 onChange={(e) => setFormData({...formData, title: e.target.value})}
                             />
+                            <div style={{display: "flex", gap: "10px"}}>
+                                {["red", "blue", "green", "yellow", "orange", "pink"].map((color) => (
+                                    <span
+                                        key={color}
+                                        className={color}
+                                        onClick={() =>
+                                            setFormData({...formData, color})
+                                        }
+                                        style={{
+                                            cursor: "pointer",
+                                            border: formData.color === color ? "2px solid black" : "none"
+                                        }}
+                                    />
+                                ))}
+                            </div>
                             <input
                                 type="time"
                                 value={formData.time}
@@ -192,7 +229,9 @@ export default function Calendar() {
                                 onChange={(e) => setFormData({...formData, description: e.target.value})}
                             />
                             <div className="modal-buttons">
-                                <button type="button" onClick={() => setIsModalOpen(false)}>Cancel</button>
+                                <button type="button" className="cancel-btn-modal"
+                                        onClick={() => setIsModalOpen(false)}>Cancel
+                                </button>
                                 <button type="submit" className="save-btn">Save Event</button>
                             </div>
                         </form>
@@ -204,42 +243,64 @@ export default function Calendar() {
             {viewEvent && (
                 <div className="modal-overlay" onClick={() => setViewEvent(null)}>
                     <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                        <h3 style={{ color: "#59e24a" }}>Event Details</h3>
+                        <h3 style={{color: "#1a1a1a"}}>Event Details</h3>
 
                         <div className="detail-item">
                             <label>Titel:</label>
                             <p><strong>{viewEvent.title}</strong></p>
                         </div>
+                        <form onSubmit={handleSaveEvent}>
 
-                        {viewEvent.time && (
-                            <div className="detail-item">
-                                <label>Zeit:</label>
-                                <p>{viewEvent.time}</p>
+                            <div style={{display: "flex", gap: "10px"}}>
+                                {["red", "blue", "green", "yellow", "orange", "pink"].map((color) => (
+                                    <span
+                                        key={color}
+                                        className={color}
+                                        onClick={() =>
+                                            setFormData({...formData, color})
+                                        }
+                                        style={{
+                                            cursor: "pointer",
+                                            border: formData.color === color ? "2px solid black" : "none"
+                                        }}
+                                    />
+                                ))}
                             </div>
-                        )}
 
-                        {viewEvent.description && (
-                            <div className="detail-item">
-                                <label>Beschreibung:</label>
-                                <p>{viewEvent.description}</p>
+
+                            {viewEvent.time && (
+                                <div className="detail-item">
+                                    <label>Zeit:</label>
+                                    <p>{viewEvent.time}</p>
+                                </div>
+                            )}
+
+                            {viewEvent.description && (
+                                <div className="detail-item">
+                                    <label>Beschreibung:</label>
+                                    <p>{viewEvent.description}</p>
+                                </div>
+                            )}
+
+
+                            <div className="modal-buttons" style={{marginTop: "20px"}}>
+                                <button
+                                    type="button" // Wichtig: Button-Typ auf Button setzen, damit er nicht das Form submittet
+                                    className="delete-btn-modal"
+                                    onClick={() => {
+                                        deleteEvent(viewEvent.dateKey, viewEvent.id);
+                                        setViewEvent(null);
+                                    }}
+                                >
+                                    Löschen
+                                </button>
+                                {/* Dieser Button submittet das Formular und ruft handleSaveEvent auf */}
+                                <button type="submit" className="save-btn">Schließen</button>
                             </div>
-                        )}
-
-                        <div className="modal-buttons" style={{ marginTop: "20px" }}>
-                            <button
-                                className="delete-btn-modal"
-                                onClick={() => {
-                                    deleteEvent(viewEvent.dateKey, viewEvent.id);
-                                    setViewEvent(null);
-                                }}
-                            >
-                                Löschen
-                            </button>
-                            <button className="save-btn" onClick={() => setViewEvent(null)}>Schließen</button>
-                        </div>
+                        </form>
                     </div>
                 </div>
-            )}
+                )}
         </div>
     );
 }

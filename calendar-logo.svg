@@ -1,0 +1,11 @@
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <title>Kalender Logo</title>
+  <rect width="64" height="64" rx="10" fill="#3DD63D"/>
+  <rect x="0" y="0" width="64" height="17" rx="10" fill="#22C022"/>
+  <rect x="0" y="8.5" width="64" height="8.5" fill="#22C022"/>
+  <rect x="13" y="-2" width="9" height="13" rx="4.5" fill="#1a9a1a"/>
+  <rect x="42" y="-2" width="9" height="13" rx="4.5" fill="#1a9a1a"/>
+  <line x1="8" y1="30" x2="56" y2="30" stroke="white" stroke-width="1.5" opacity="0.7"/>
+  <line x1="8" y1="44" x2="56" y2="44" stroke="white" stroke-width="1.5" opacity="0.7"/>
+  <rect x="28" y="32.5" width="12" height="12" rx="2.5" fill="white"/>
+</svg>
